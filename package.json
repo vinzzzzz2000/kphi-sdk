@@ -1,0 +1,17 @@
+{
+  "name": "@kphi/sdk",
+  "version": "1.0.0",
+  "description": "K-Phi module development SDK — contract, test harness, and UI helpers",
+  "main": "src/index.js",
+  "types": "types/index.d.ts",
+  "scripts": {
+    "test": "node test/run-harness.js",
+    "validate": "node src/validate.js"
+  },
+  "keywords": ["kphi", "treasury", "module", "sdk"],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "ajv": "^8.12.0"
+  }
+}

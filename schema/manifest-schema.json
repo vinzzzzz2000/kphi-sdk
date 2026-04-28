@@ -1,0 +1,352 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://kphi.io/sdk/manifest-schema.json",
+  "title": "K-Phi Module Manifest",
+  "description": "Schema for manifest.yaml. Every K-Phi module must conform to this.",
+  "type": "object",
+  "required": ["id", "name", "version", "category", "dataModel", "calculations", "api", "ui"],
+
+  "properties": {
+
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Unique module identifier. Must match the directory name exactly. kebab-case only.",
+      "examples": ["kphi-fx", "liquidity-planning", "kphi-risk"]
+    },
+
+    "name": {
+      "type": "string",
+      "description": "Human-readable module name shown in UI and license catalog.",
+      "examples": ["FX Management", "Liquidity Planning"]
+    },
+
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version.",
+      "examples": ["1.0.0", "2.1.3"]
+    },
+
+    "category": {
+      "type": "string",
+      "enum": ["treasury", "capital-markets", "risk", "reporting", "fx", "compliance"],
+      "description": "Module category for catalog grouping and filtering."
+    },
+
+    "description": {
+      "type": "string",
+      "description": "Plain-text description shown in license catalog."
+    },
+
+    "lifecycle": {
+      "type": "object",
+      "description": "Paths to lifecycle hook scripts. All optional but recommended.",
+      "properties": {
+        "onRegister":   { "type": "string", "description": "Called when module is first activated for a tenant." },
+        "onUnregister": { "type": "string", "description": "Called when module is deactivated. Clean up tenant data here." },
+        "onUpgrade":    { "type": "string", "description": "Called on version upgrade. Run migrations here." },
+        "healthCheck":  { "type": "string", "description": "Called periodically. Return { ok: bool, message: string }." }
+      }
+    },
+
+    "dataModel": {
+      "type": "object",
+      "required": ["coreDependencies"],
+      "description": "Declares the module's data needs and owned tables.",
+      "properties": {
+
+        "coreDependencies": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Core K-Phi tables this module reads. Drives schema validation at startup.",
+          "examples": [["core.tenant", "core.entity_hierarchy", "core.currency", "core.gl_account"]]
+        },
+
+        "entities": {
+          "type": "array",
+          "description": "Tables owned by this module. Prefixed with module id automatically (e.g. kphi_fx_hedge_program).",
+          "items": {
+            "type": "object",
+            "required": ["name", "fields"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "description": "Table name suffix. Final name = {moduleId}_{name}."
+              },
+              "timeSeries": {
+                "type": "boolean",
+                "description": "If true, platform adds period_start/period_end columns automatically."
+              },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "type"],
+                  "properties": {
+                    "name":      { "type": "string" },
+                    "type":      { "type": "string", "enum": ["string", "decimal", "integer", "number", "boolean", "date", "json", "percentage", "reference"] },
+                    "required":  { "type": "boolean" },
+                    "precision": { "type": "integer" },
+                    "reference": {
+                      "type": "object",
+                      "properties": {
+                        "entity": { "type": "string" },
+                        "field":  { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              },
+              "indexes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "fields": { "type": "array", "items": { "type": "string" } },
+                    "unique": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "calculations": {
+      "type": "object",
+      "required": [],
+      "description": "Declares what this module computes, what it consumes, and what it publishes.",
+      "properties": {
+
+        "inputs": {
+          "type": "array",
+          "description": "Data consumed FROM other modules via CalcEngine. Never import directly.",
+          "items": {
+            "type": "object",
+            "required": ["name", "source"],
+            "properties": {
+              "name":     { "type": "string", "description": "Alias used in ctx.inputs.{name}" },
+              "source":   { "type": "string", "pattern": "^[a-z][a-z0-9-]*\\.[a-z][a-z0-9_]*$", "description": "Format: {moduleId}.{outputName}" },
+              "required": { "type": "boolean", "default": true },
+              "fallback": {
+                "type": "object",
+                "properties": {
+                  "value":    {},
+                  "behavior": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+
+        "outputs": {
+          "type": "array",
+          "description": "Data this module publishes for other modules to consume.",
+          "items": {
+            "type": "object",
+            "required": ["name", "calculation", "schema"],
+            "properties": {
+              "name":        { "type": "string", "description": "Output identifier. Other modules reference as {moduleId}.{name}" },
+              "description": { "type": "string" },
+              "calculation": { "type": "string", "description": "Relative path to the JS function file." },
+              "cacheTTL":    { "type": "string", "pattern": "^\\d+(s|m|h|d)$", "description": "Cache duration e.g. 5m, 1h, 1d" },
+              "triggers": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Events that invalidate this output's cache. Format: data.updated.{table} or calc.updated.{moduleId}.{outputName}"
+              },
+              "schema": {
+                "type": "object",
+                "required": ["fields"],
+                "description": "Declared output shape. Validated at runtime.",
+                "properties": {
+                  "fields": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["name", "type"],
+                      "properties": {
+                        "name": { "type": "string" },
+                        "type": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        "internal": {
+          "type": "array",
+          "description": "Internal calculation steps not published outside the module.",
+          "items": {
+            "type": "object",
+            "required": ["name", "calculation"],
+            "properties": {
+              "name":        { "type": "string" },
+              "calculation": { "type": "string" },
+              "dependsOn":   { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+
+    "api": {
+      "type": "object",
+      "required": ["routes"],
+      "description": "Module API configuration. Routes are mounted at /api/modules/{moduleId}/",
+      "properties": {
+        "routes":     { "type": "string", "description": "Path to Express router file." },
+        "middleware": { "type": "array", "items": { "type": "string" }, "description": "Module-specific middleware applied before routes." }
+      }
+    },
+
+    "ui": {
+      "type": "object",
+      "required": [],
+      "description": "UI integration points. ModuleLoader injects these into the K-Phi shell.",
+      "properties": {
+
+        "navigation": {
+          "type": "array",
+          "description": "Nav items injected into the sidebar. Tenant sees only licensed modules.",
+          "items": {
+            "type": "object",
+            "required": ["label", "path"],
+            "properties": {
+              "label":              { "type": "string" },
+              "path":               { "type": "string" },
+              "icon":               { "type": "string", "description": "Lucide icon name or emoji." },
+              "order":              { "type": "integer", "description": "Sort order in nav. Lower = higher." },
+              "parent":             { "type": "string", "description": "Parent nav label for nested items." },
+              "requiredPermission": { "type": "string", "description": "Permission key from permissions.definitions." }
+            }
+          }
+        },
+
+        "slot": {
+          "type": "string",
+          "enum": ["main-panel", "dashboard-widget", "drawer", "modal"],
+          "description": "Where this module's primary UI renders in the K-Phi shell.",
+          "default": "main-panel"
+        },
+
+        "toggleLabel": {
+          "type": "string",
+          "description": "Short label shown in the module toggle bar (e.g. 'FX', 'Indirect', 'Direct'). Max 12 chars."
+        },
+
+        "screens": {
+          "type": "array",
+          "description": "View components registered for module routes.",
+          "items": {
+            "type": "object",
+            "required": ["path", "component"],
+            "properties": {
+              "path":      { "type": "string" },
+              "component": { "type": "string" },
+              "layout":    { "type": "string", "enum": ["default", "dashboard", "full-width"] }
+            }
+          }
+        },
+
+        "widgets": {
+          "type": "array",
+          "description": "Dashboard widgets this module contributes.",
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "component"],
+            "properties": {
+              "id":          { "type": "string" },
+              "label":       { "type": "string" },
+              "component":   { "type": "string" },
+              "defaultSize": {
+                "type": "object",
+                "properties": {
+                  "width":  { "type": "integer" },
+                  "height": { "type": "integer" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "ingestion": {
+      "type": "object",
+      "description": "Data import sources. Optional.",
+      "properties": {
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "schema"],
+            "properties": {
+              "name":               { "type": "string" },
+              "schema":             { "type": "object" },
+              "supportedConnectors":{ "type": "array", "items": { "type": "string" } },
+              "mappingTemplate":    { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "permissions": {
+      "type": "object",
+      "description": "Permission keys this module defines and uses.",
+      "properties": {
+        "definitions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["key", "label"],
+            "properties": {
+              "key":         { "type": "string", "description": "Format: {moduleId}.{action}" },
+              "label":       { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "defaultRoles": {
+          "type": "object",
+          "description": "Default permission sets for viewer/editor/admin roles.",
+          "properties": {
+            "viewer": { "type": "array", "items": { "type": "string" } },
+            "editor": { "type": "array", "items": { "type": "string" } },
+            "admin":  { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+
+    "deliverables": {
+      "type": "object",
+      "description": "Report templates this module produces. Optional.",
+      "properties": {
+        "reports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "template", "dataSource"],
+            "properties": {
+              "id":         { "type": "string" },
+              "name":       { "type": "string" },
+              "template":   { "type": "string" },
+              "dataSource": { "type": "string" },
+              "format":     { "type": "array", "items": { "type": "string", "enum": ["xlsx", "pdf", "pptx", "csv"] } }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "additionalProperties": false
+}
