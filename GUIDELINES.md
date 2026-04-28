@@ -194,7 +194,7 @@ Each module lives in its own repository. This is intentional.
 - The SDK defines the interface — what you build behind it is yours
 - The K-Phi core never has visibility into your implementation, only your declared inputs and outputs
 
-Keep your repo private until the integration agreement is signed. Work on a personal machine, personal GitHub account, outside employer hours, with no employer data or proprietary methodology. The domain expertise in your head is yours. Document that the work was done independently.
+Keep your repo private until the integration agreement is signed.
 
 ---
 
