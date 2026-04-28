@@ -1,0 +1,223 @@
+# =============================================================================
+# K-PHI SDK — Release Pipeline
+# =============================================================================
+# Triggers on: git tag push (v*)
+#
+# What it does:
+#   1. Runs tests
+#   2. Builds dist bundles
+#   3. Publishes to npm (private, restricted)
+#   4. Publishes to GitHub Packages
+#   5. Uploads to CDN (S3/R2)
+#   6. Creates GitHub Release with changelog
+#
+# Required secrets (Settings → Secrets → Actions):
+#   NPM_TOKEN       — npm automation token (https://www.npmjs.com/settings/~/tokens)
+#   CDN_BUCKET      — S3/R2 bucket name
+#   CDN_REGION      — AWS region (e.g. eu-central-1)
+#   CDN_ENDPOINT    — Custom endpoint if using Cloudflare R2 or MinIO (optional)
+#   AWS_ACCESS_KEY_ID
+#   AWS_SECRET_ACCESS_KEY
+# =============================================================================
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+
+  # ── 1. Test ────────────────────────────────────────────────────────────────
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm test
+
+  # ── 2. Build ───────────────────────────────────────────────────────────────
+  build:
+    name: Build
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  # ── 3. Publish to npm ──────────────────────────────────────────────────────
+  publish-npm:
+    name: Publish → npm
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - run: npm publish --access restricted
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # ── 4. Publish to GitHub Packages ─────────────────────────────────────────
+  publish-gpr:
+    name: Publish → GitHub Packages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      # Scope package to GitHub registry
+      - run: |
+          echo '{"name":"@kphi/sdk"}' | node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json'));
+            pkg.publishConfig = { registry: 'https://npm.pkg.github.com' };
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          "
+        shell: bash
+
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ── 5. Upload to CDN ───────────────────────────────────────────────────────
+  cdn:
+    name: Upload → CDN
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ secrets.CDN_BUCKET != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - run: node scripts/cdn-upload.js
+        env:
+          CDN_BUCKET:             ${{ secrets.CDN_BUCKET }}
+          CDN_REGION:             ${{ secrets.CDN_REGION }}
+          CDN_ENDPOINT:           ${{ secrets.CDN_ENDPOINT }}
+          AWS_ACCESS_KEY_ID:      ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  # ── 6. GitHub Release ──────────────────────────────────────────────────────
+  release:
+    name: GitHub Release
+    needs: [publish-npm, publish-gpr]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            CHANGES=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s" --no-merges)
+          else
+            CHANGES=$(git log --pretty=format:"- %s" --no-merges)
+          fi
+          echo "changes<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: "@kphi/sdk ${{ steps.version.outputs.version }}"
+          body: |
+            ## Changes
+            ${{ steps.changelog.outputs.changes }}
+
+            ## Install
+
+            **npm:**
+            ```bash
+            npm install @kphi/sdk@${{ steps.version.outputs.version }}
+            ```
+
+            **GitHub Packages:**
+            ```bash
+            npm install @kphi/sdk@${{ steps.version.outputs.version }} --registry https://npm.pkg.github.com
+            ```
+
+            **CDN (browser):**
+            ```html
+            <script src="https://cdn.k-phi.com/sdk/${{ steps.version.outputs.version }}/ui-helpers.umd.js"></script>
+            ```
+          files: |
+            dist/kphi-sdk.umd.js
+            dist/kphi-sdk.esm.js
+            dist/ui-helpers.umd.js
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}

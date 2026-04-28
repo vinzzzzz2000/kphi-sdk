@@ -2,16 +2,72 @@
   "name": "@kphi/sdk",
   "version": "1.0.0",
   "description": "K-Phi module development SDK — contract, test harness, and UI helpers",
+  "author": "K-Phi <sdk@k-phi.com>",
+  "license": "UNLICENSED",
+  "homepage": "https://k-phi.com/developers",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vinzzzzz2000/kphi-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vinzzzzz2000/kphi-sdk/issues"
+  },
   "main": "src/index.js",
   "types": "types/index.d.ts",
-  "scripts": {
-    "test": "node test/run-harness.js",
-    "validate": "node src/validate.js"
+  "browser": "dist/kphi-sdk.umd.js",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./src/index.js",
+      "types": "./types/index.d.ts"
+    },
+    "./test-harness": {
+      "import": "./src/test-harness.js",
+      "require": "./src/test-harness.js"
+    },
+    "./ui-helpers": {
+      "import": "./src/ui-helpers.js",
+      "require": "./src/ui-helpers.js",
+      "browser": "./dist/ui-helpers.umd.js"
+    },
+    "./schema": "./schema/manifest-schema.json"
   },
-  "keywords": ["kphi", "treasury", "module", "sdk"],
-  "license": "UNLICENSED",
+  "files": [
+    "src/",
+    "types/",
+    "schema/",
+    "dist/",
+    "README.md",
+    "GUIDELINES.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js",
+    "test": "node scripts/test.js",
+    "prepublishOnly": "npm run build && npm test",
+    "release": "npm run build && npm run release:npm && npm run release:gpr",
+    "release:npm": "npm publish --access restricted",
+    "release:gpr": "npm publish --registry https://npm.pkg.github.com --access restricted",
+    "cdn:upload": "node scripts/cdn-upload.js",
+    "version:patch": "npm version patch && git push && git push --tags",
+    "version:minor": "npm version minor && git push && git push --tags",
+    "version:major": "npm version major && git push && git push --tags"
+  },
+  "keywords": [
+    "kphi",
+    "treasury",
+    "module",
+    "sdk",
+    "fx",
+    "finance"
+  ],
   "dependencies": {
-    "js-yaml": "^4.1.0",
-    "ajv": "^8.12.0"
+    "ajv": "^8.12.0",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.2"
+  },
+  "publishConfig": {
+    "access": "restricted"
   }
 }
