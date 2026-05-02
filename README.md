@@ -1,6 +1,26 @@
 # @kphi/sdk
 
-The K-Phi module development kit. Everything you need to build, test, and integrate a module into the K-Phi platform — without access to K-Phi core source.
+The K-Phi module development kit. Build, test, and preview treasury modules that plug into the K-Phi platform — without access to K-Phi core source.
+
+---
+
+## Why use the SDK
+
+**Visual parity out of the box.** `npx kphi-dev` renders your module inside the real K-Phi shell — same sidebar, topbar, toggle bar, filter selectors, fonts, colors. You see what your users see. No K-Phi instance needed.
+
+**Design tokens.** 60+ CSS variables and pre-built component classes (`kphi-card`, `kphi-table`, `kphi-btn`, `kphi-badge`, `kphi-chip`, `kphi-row`, etc.) extracted from K-Phi core. Visual consistency without guessing hex codes.
+
+**Manifest contract.** `manifest.yaml` declares your tables, inputs, outputs, API routes, and UI slots. Validates instantly. If it passes, your module loads in K-Phi. If it doesn't, you know exactly why before you ship.
+
+**Local test harness.** `createMockCtx()` + `runCalc()` run your calculations with mock data. No server, no database, no tenant. Fast iteration.
+
+**Typed data contract.** Your module gets a `ctx` object with upstream data (`ctx.inputs`), your own tables (`ctx.db.query`), core platform data (`ctx.core`), and calc parameters (`ctx.params`). You code against the contract, not against K-Phi internals.
+
+**UI registration.** `registerView()` and `registerWidget()` plug your render function into K-Phi's shell slots (main panel, dashboard widget, drawer, modal). The shell handles auth, routing, and parameter changes.
+
+**Isolation.** Your module never imports from K-Phi core or other modules directly. Dependencies are declared in the manifest, injected by the CalcEngine. Your code can't break other modules.
+
+**Platform helpers.** `sdk.fetch()` handles auth headers and tenant scoping. `sdk.getParams()` reads the global filter bar. `sdk.onParamsChange()` reacts when the user changes period, entity, or currency.
 
 ---
 
@@ -109,7 +129,7 @@ sdk.registerView({
 });
 ```
 
-### 4. Preview in the K-Phi shell
+### 5. Preview in the K-Phi shell
 
 ```bash
 npx kphi-dev
@@ -119,7 +139,7 @@ Opens `http://localhost:3333` — your module rendered inside the K-Phi shell wi
 
 If you haven't built a UI yet, the dev shell shows a **component preview** with all available K-Phi styled elements (buttons, tables, cards, badges, stat blocks, financial rows) so you can see the design system and copy the CSS classes.
 
-### 5. Use design tokens in your UI
+### 6. Use design tokens in your UI
 
 ```js
 // Your module's render function
