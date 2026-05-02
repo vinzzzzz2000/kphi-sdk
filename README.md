@@ -24,6 +24,13 @@ The K-Phi module development kit. Build, test, and preview treasury modules that
 
 ---
 
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) 18 or later
+- npm (comes with Node.js)
+
+---
+
 ## Install
 
 ```bash

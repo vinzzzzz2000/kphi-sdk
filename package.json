@@ -33,6 +33,9 @@
     "./schema": "./schema/manifest-schema.json",
     "./tokens.css": "./design/tokens.css"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "bin": {
     "kphi-dev": "scripts/dev.js"
   },
