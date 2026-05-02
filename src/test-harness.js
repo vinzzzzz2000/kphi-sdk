@@ -275,12 +275,12 @@ function generatePeriods(start, end) {
   const periods = [];
   const s = new Date(start);
   const e = new Date(end);
-  let current = new Date(s.getFullYear(), s.getMonth(), 1);
+  let current = new Date(Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), 1));
 
   while (current <= e) {
-    const year  = current.getFullYear();
-    const month = current.getMonth() + 1;
-    const last  = new Date(year, month, 0);
+    const year  = current.getUTCFullYear();
+    const month = current.getUTCMonth() + 1;
+    const last  = new Date(Date.UTC(year, month, 0));
     periods.push({
       id:           `${year}-${String(month).padStart(2,'0')}`,
       name:         `${year}-${String(month).padStart(2,'0')}`,
@@ -290,7 +290,7 @@ function generatePeriods(start, end) {
       fiscal_year:  year,
       fiscal_month: month,
     });
-    current.setMonth(current.getMonth() + 1);
+    current.setUTCMonth(current.getUTCMonth() + 1);
   }
   return periods;
 }
