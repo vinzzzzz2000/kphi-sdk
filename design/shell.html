@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-Φ Dev Shell — {{MODULE_NAME}}</title>
+<link rel="stylesheet" href="/tokens.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body { height: 100%; overflow: hidden; }
+
+  /* ── Sidebar ──────────────────────────────────────────────────── */
+  .shell-sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; width: 60px;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-sidebar);
+    z-index: 80; display: flex; flex-direction: column;
+    align-items: center; padding: 10px 0;
+  }
+  .shell-logo {
+    font-size: 16px; font-weight: 800; color: var(--kphi-pink);
+    margin-bottom: 8px; letter-spacing: -0.5px; user-select: none;
+  }
+  .shell-logo span { color: var(--kphi-lime); font-size: 10px; }
+  .shell-nav-btn {
+    width: 44px; height: 44px; border-radius: 8px; border: none;
+    background: rgba(230, 255, 0, 0.15); color: var(--kphi-lime);
+    font-size: 20px; cursor: default; margin-top: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .shell-nav-sep {
+    width: 36px; height: 1px; background: #2a2a45; margin: 8px 0;
+  }
+  .shell-nav-ghost {
+    width: 44px; height: 44px; border-radius: 8px; border: none;
+    background: transparent; margin-top: 4px;
+  }
+  .shell-nav-ghost::after {
+    content: ''; display: block; width: 20px; height: 3px;
+    background: #2a2a45; border-radius: 2px; margin: 0 auto;
+  }
+
+  /* ── Topbar ───────────────────────────────────────────────────── */
+  .shell-topbar {
+    position: fixed; top: 0; left: 60px; right: 0; height: 50px;
+    background: var(--bg-topbar); border-bottom: 1px solid var(--border-card);
+    backdrop-filter: blur(var(--blur-topbar));
+    display: flex; align-items: center; padding: 0 20px; gap: 12px; z-index: 70;
+  }
+  .shell-topbar h2 {
+    font-size: 14px; color: var(--text-primary); font-weight: 700;
+  }
+  .shell-topbar-badge {
+    background: rgba(230, 0, 126, 0.2); color: var(--kphi-pink);
+    font-size: 9px; font-weight: 700; padding: 2px 8px;
+    border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .shell-filters {
+    margin-left: auto; display: flex; gap: 8px; align-items: center;
+  }
+  .shell-filters label {
+    font-size: 10px; color: var(--text-muted); margin-right: 2px;
+  }
+  .shell-filters select {
+    padding: 5px 8px; background: var(--bg-input);
+    border: 1px solid var(--border-input); border-radius: 4px;
+    color: var(--text-primary); font-size: 11px; font-family: var(--font-body);
+  }
+
+  /* ── Module toggle bar ────────────────────────────────────────── */
+  .shell-toggle {
+    position: fixed; top: 50px; left: 60px; right: 0; height: 32px;
+    background: rgba(10, 10, 28, 0.95); border-bottom: 1px solid var(--border-row);
+    display: flex; align-items: center; padding: 0 16px; gap: 4px; z-index: 69;
+  }
+  .shell-toggle-btn {
+    padding: 5px 14px; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.5px; cursor: pointer; color: var(--text-dimmed);
+    border: none; background: transparent; border-radius: 4px;
+    transition: all 0.15s; text-transform: uppercase; font-family: var(--font-body);
+  }
+  .shell-toggle-btn:hover { color: var(--text-label); background: rgba(50, 50, 80, 0.3); }
+  .shell-toggle-btn.active {
+    background: linear-gradient(135deg, rgba(230, 0, 126, 0.25), rgba(140, 90, 246, 0.2));
+    color: var(--kphi-lime);
+    box-shadow: inset 0 0 0 1px rgba(230, 255, 0, 0.15);
+  }
+
+  /* ── Content area ─────────────────────────────────────────────── */
+  .shell-content {
+    position: fixed; top: 82px; left: 60px; right: 0; bottom: 0;
+    overflow-y: auto; overflow-x: hidden; padding: 16px 24px;
+  }
+
+  /* ── Dev ribbon ───────────────────────────────────────────────── */
+  .dev-ribbon {
+    position: fixed; bottom: 0; left: 60px; right: 0; height: 28px;
+    background: rgba(230, 255, 0, 0.08); border-top: 1px solid rgba(230, 255, 0, 0.15);
+    display: flex; align-items: center; padding: 0 16px; gap: 12px; z-index: 100;
+    font-family: var(--font-mono); font-size: 10px; color: var(--text-dimmed);
+  }
+  .dev-ribbon-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent-success);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .dev-ribbon-module { color: var(--kphi-lime); font-weight: 700; }
+  .dev-ribbon-status { color: var(--text-muted); margin-left: auto; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="shell-sidebar">
+  <div class="shell-logo">K-Φ<br><span>DEV</span></div>
+  <div class="shell-nav-sep"></div>
+  <div class="shell-nav-btn" title="{{MODULE_LABEL}}">{{MODULE_ICON}}</div>
+  <div class="shell-nav-sep"></div>
+  <div class="shell-nav-ghost"></div>
+  <div class="shell-nav-ghost"></div>
+  <div class="shell-nav-ghost"></div>
+</div>
+
+<!-- Topbar -->
+<div class="shell-topbar">
+  <h2>{{MODULE_NAME}}</h2>
+  <span class="shell-topbar-badge">DEV MODE</span>
+  <div class="shell-filters">
+    <label>Period</label>
+    <select id="dev-period" onchange="window._devParamsChanged()">
+      <option>2025-01</option><option>2025-02</option><option>2025-03</option>
+      <option>2025-04</option><option>2025-05</option><option>2025-06</option>
+      <option selected>2025-07</option><option>2025-08</option><option>2025-09</option>
+      <option>2025-10</option><option>2025-11</option><option>2025-12</option>
+    </select>
+    <label>Entity</label>
+    <select id="dev-entity" onchange="window._devParamsChanged()">
+      <option value="ALL">All entities</option>
+      <option>US-HQ</option><option>EU-OPS</option><option>APAC</option>
+    </select>
+    <label>CCY</label>
+    <select id="dev-ccy" onchange="window._devParamsChanged()">
+      <option>USD</option><option>EUR</option><option>GBP</option>
+    </select>
+  </div>
+</div>
+
+<!-- Module toggle bar -->
+<div class="shell-toggle">
+  <div class="shell-toggle-btn">BS</div>
+  <div class="shell-toggle-btn">P&L</div>
+  <div class="shell-toggle-btn">CFS</div>
+  <div class="shell-toggle-btn">GL</div>
+  <div class="shell-toggle-btn active">{{MODULE_TOGGLE}}</div>
+</div>
+
+<!-- Module content renders here -->
+<div class="shell-content" id="module-root">
+  <div style="text-align:center;padding:60px 0;color:var(--text-dimmed)">
+    Loading module...
+  </div>
+</div>
+
+<!-- Dev ribbon -->
+<div class="dev-ribbon">
+  <div class="dev-ribbon-dot"></div>
+  <span class="dev-ribbon-module">{{MODULE_ID}}</span>
+  <span>v{{MODULE_VERSION}}</span>
+  <span>·</span>
+  <span>manifest: ✅</span>
+  <span>·</span>
+  <span id="dev-calc-status">calc: idle</span>
+  <span class="dev-ribbon-status" id="dev-time"></span>
+</div>
+
+<script>
+  // ── Dev shell runtime ──────────────────────────────────────────
+  // Injects a mock KPhiSDK that modules can call registerView() on.
+
+  const _registeredViews = [];
+  let _paramsListeners = [];
+
+  window.__KPHI_MODULE_ID__ = '{{MODULE_ID}}';
+  window.__KPHI_AUTH_TOKEN__ = 'dev-token';
+
+  window.KPhiSDK = {
+    registerView(reg) {
+      _registeredViews.push(reg);
+      _renderModule(reg);
+    },
+    registerWidget(reg) {
+      _registeredViews.push({ ...reg, slot: 'dashboard-widget' });
+    },
+    navigate(viewId, params) { console.log('[dev-shell] navigate:', viewId, params); },
+    getParams() {
+      return {
+        periodStart: document.getElementById('dev-period').value + '-01',
+        periodEnd:   document.getElementById('dev-period').value + '-28',
+        currency:    document.getElementById('dev-ccy').value,
+        entityIds:   [document.getElementById('dev-entity').value],
+      };
+    },
+    onParamsChange(cb) {
+      _paramsListeners.push(cb);
+      return () => { _paramsListeners = _paramsListeners.filter(f => f !== cb); };
+    },
+    async fetch(path, opts) {
+      console.log('[dev-shell] sdk.fetch:', path, opts);
+      return { ok: true, data: [] };
+    },
+    _init(shell) {},
+  };
+
+  window._devParamsChanged = function() {
+    const params = window.KPhiSDK.getParams();
+    _paramsListeners.forEach(cb => cb(params));
+  };
+
+  function _renderModule(reg) {
+    const root = document.getElementById('module-root');
+    const t0 = performance.now();
+    try {
+      const el = reg.render(window.KPhiSDK.getParams());
+      root.innerHTML = '';
+      if (typeof el === 'string') { root.innerHTML = el; }
+      else if (el instanceof HTMLElement) { root.appendChild(el); }
+      const ms = (performance.now() - t0).toFixed(0);
+      document.getElementById('dev-calc-status').textContent = 'render: ' + ms + 'ms';
+      document.getElementById('dev-time').textContent = new Date().toLocaleTimeString();
+    } catch (err) {
+      root.innerHTML = '<div style="color:var(--accent-danger);padding:20px;font-family:var(--font-mono);font-size:13px">'
+        + '<strong>Module render error:</strong><br><br>' + err.message + '<br><pre>' + err.stack + '</pre></div>';
+    }
+  }
+
+  // Show time
+  document.getElementById('dev-time').textContent = new Date().toLocaleTimeString();
+</script>
+
+<!-- Module UI bundle loaded here by dev server -->
+{{MODULE_SCRIPT}}
+
+</body>
+</html>

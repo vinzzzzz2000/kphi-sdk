@@ -20,6 +20,9 @@ npm install @kphi/sdk
 | `types/index.d.ts` | TypeScript types for `ctx` — the object injected into every calculation. |
 | `src/test-harness.js` | Run and test your calculations locally. No K-Phi instance needed. |
 | `src/ui-helpers.js` | Register your UI views into the K-Phi shell (toggle, main panel, widgets). |
+| `design/tokens.css` | K-Phi design tokens — colors, fonts, spacing. Import this so your module matches the platform visually. |
+| `design/shell.html` | Dev shell template — renders your module inside a K-Phi shell mockup. |
+| `scripts/dev.js` | Local dev server. Run `npx kphi-dev` to preview your module in the K-Phi shell. |
 
 ---
 
@@ -105,6 +108,41 @@ sdk.registerView({
   }
 });
 ```
+
+### 4. Preview in the K-Phi shell
+
+```bash
+npx kphi-dev
+```
+
+Opens `http://localhost:3333` — your module rendered inside the K-Phi shell with the exact same colors, fonts, sidebar, topbar, and toggle bar your users see. No K-Phi instance needed.
+
+If you haven't built a UI yet, the dev shell shows a **component preview** with all available K-Phi styled elements (buttons, tables, cards, badges, stat blocks, financial rows) so you can see the design system and copy the CSS classes.
+
+### 5. Use design tokens in your UI
+
+```js
+// Your module's render function
+render(params) {
+  const el = document.createElement('div');
+  el.innerHTML = `
+    <div class="kphi-card">
+      <div class="kphi-card-header">FX Exposures</div>
+      <div class="kphi-card-body">
+        <table class="kphi-table">
+          <thead><tr><th>Entity</th><th>CCY</th><th>Net Exposure</th></tr></thead>
+          <tbody>
+            <tr><td>US-HQ</td><td>EUR</td><td class="kphi-negative">-350,000</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  return el;
+}
+```
+
+Available CSS classes: `kphi-card`, `kphi-table`, `kphi-btn`, `kphi-btn-primary`, `kphi-badge`, `kphi-chip`, `kphi-input`, `kphi-select`, `kphi-hero`, `kphi-section`, `kphi-row`, `kphi-stat-value`, `kphi-positive`, `kphi-negative`, `kphi-mono`, `kphi-code`. See `design/tokens.css` for the full list.
 
 ---
 

@@ -1,0 +1,254 @@
+/* =============================================================================
+   K-PHI DESIGN TOKENS
+   =============================================================================
+   Extracted from K-Phi core. Import this in your module to match the platform.
+   These are the ONLY approved tokens — do not hardcode colors or fonts.
+   ============================================================================= */
+
+:root {
+  /* ── Brand ──────────────────────────────────────────────────────── */
+  --kphi-pink:          #E6007E;
+  --kphi-pink-dark:     #b0005e;
+  --kphi-lime:          #E6FF00;
+  --kphi-yellow:        #FFE600;
+
+  /* ── Backgrounds ────────────────────────────────────────────────── */
+  --bg-body:            linear-gradient(145deg, #120828 0%, #0a1a30 35%, #081e28 60%, #0a2820 100%);
+  --bg-card:            rgba(18, 18, 42, 0.65);
+  --bg-card-hover:      rgba(30, 30, 55, 0.8);
+  --bg-input:           rgba(10, 10, 22, 0.6);
+  --bg-row-hover:       rgba(30, 30, 60, 0.4);
+  --bg-row-total:       rgba(30, 30, 60, 0.5);
+  --bg-sidebar:         linear-gradient(180deg, #1a0a3e 0%, #0c2340 40%, #0a3d2e 100%);
+  --bg-topbar:          rgba(14, 14, 36, 0.97);
+  --bg-sticky-th:       rgba(12, 12, 30, 0.97);
+  --bg-tooltip:         #1a1040;
+
+  /* ── Text ───────────────────────────────────────────────────────── */
+  --text-primary:       #eeeef5;
+  --text-body:          #c8c8e0;
+  --text-muted:         #6a6a8e;
+  --text-dimmed:        #5a5a7a;
+  --text-faint:         #9a9ab8;
+  --text-label:         #8a8aaa;
+
+  /* ── Borders ────────────────────────────────────────────────────── */
+  --border-card:        rgba(60, 60, 100, 0.3);
+  --border-input:       rgba(50, 50, 80, 0.4);
+  --border-row:         rgba(35, 35, 65, 0.4);
+  --border-separator:   rgba(50, 50, 80, 0.3);
+  --border-sidebar:     #1a3a5a;
+
+  /* ── Accents ────────────────────────────────────────────────────── */
+  --accent-success:     #22c55e;
+  --accent-warning:     #f59e0b;
+  --accent-danger:      #ef6461;
+  --accent-info:        #3b82f6;
+
+  /* ── Typography ─────────────────────────────────────────────────── */
+  --font-body:          'DM Sans', 'Segoe UI', -apple-system, sans-serif;
+  --font-mono:          'JetBrains Mono', Consolas, monospace;
+  --font-size-xs:       9px;
+  --font-size-sm:       11px;
+  --font-size-base:     14px;
+  --font-size-md:       15px;
+  --font-size-lg:       16px;
+  --font-size-xl:       18px;
+  --font-size-hero:     30px;
+
+  /* ── Spacing ────────────────────────────────────────────────────── */
+  --radius-sm:          4px;
+  --radius-md:          8px;
+  --radius-lg:          10px;
+  --radius-xl:          14px;
+  --radius-pill:        20px;
+
+  /* ── Shadows ────────────────────────────────────────────────────── */
+  --shadow-card:        0 4px 24px rgba(0, 0, 0, 0.2);
+  --shadow-dropdown:    0 12px 48px rgba(0, 0, 0, 0.6);
+  --shadow-pink:        0 2px 12px rgba(230, 0, 126, 0.3);
+
+  /* ── Backdrop ───────────────────────────────────────────────────── */
+  --blur-card:          12px;
+  --blur-topbar:        12px;
+}
+
+/* ── Base Reset ───────────────────────────────────────────────────── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg-body);
+  background-attachment: fixed;
+  color: var(--text-body);
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Cards ────────────────────────────────────────────────────────── */
+.kphi-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(var(--blur-card));
+  -webkit-backdrop-filter: blur(var(--blur-card));
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  margin-bottom: 10px;
+}
+.kphi-card-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-separator);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.kphi-card-body { padding: 16px 20px 18px; overflow: auto; }
+
+/* ── Tables ───────────────────────────────────────────────────────── */
+.kphi-table { width: 100%; border-collapse: collapse; }
+.kphi-table th {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid rgba(80, 80, 120, 0.4);
+  text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-sticky-th);
+}
+.kphi-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-row);
+  font-size: var(--font-size-base);
+  white-space: nowrap;
+}
+.kphi-table tr:hover { background: var(--bg-row-hover); }
+
+/* ── Buttons ──────────────────────────────────────────────────────── */
+.kphi-btn {
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-input);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+.kphi-btn-primary   { background: var(--kphi-pink); color: #fff; border-color: var(--kphi-pink); }
+.kphi-btn-primary:hover { background: var(--kphi-pink-dark); box-shadow: var(--shadow-pink); }
+.kphi-btn-secondary { background: #222240; color: #c0c0da; }
+.kphi-btn-secondary:hover { background: #2a2a50; }
+.kphi-btn-accent    { background: #2a2500; color: var(--kphi-lime); border-color: #3a3500; }
+.kphi-btn-sm        { padding: 5px 12px; font-size: var(--font-size-sm); }
+
+/* ── Inputs ───────────────────────────────────────────────────────── */
+.kphi-input, .kphi-select {
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-family: var(--font-body);
+}
+.kphi-input:focus, .kphi-select:focus {
+  outline: none;
+  border-color: var(--kphi-pink);
+}
+
+/* ── Chips / Tags ─────────────────────────────────────────────────── */
+.kphi-chip {
+  padding: 6px 16px;
+  border-radius: 5px;
+  border: 1px solid var(--border-input);
+  font-size: 13px;
+  cursor: pointer;
+  background: rgba(10, 10, 22, 0.5);
+  color: var(--text-muted);
+  font-weight: 500;
+  transition: all 0.1s;
+}
+.kphi-chip.active, .kphi-chip:hover { color: var(--kphi-pink); border-color: var(--kphi-pink); }
+.kphi-chip.active { background: #1e0a18; }
+
+/* ── Badges ───────────────────────────────────────────────────────── */
+.kphi-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+.kphi-badge-pink { background: rgba(230, 0, 126, 0.2); color: var(--kphi-pink); }
+.kphi-badge-lime { background: rgba(230, 255, 0, 0.2); color: var(--kphi-lime); }
+.kphi-badge-red  { background: rgba(239, 100, 97, 0.15); color: var(--accent-danger); }
+.kphi-badge-green{ background: rgba(34, 197, 94, 0.15); color: var(--accent-success); }
+
+/* ── Stat blocks ──────────────────────────────────────────────────── */
+.kphi-stat-value { font-size: var(--font-size-hero); font-weight: 700; }
+.kphi-stat-label { font-size: 12px; color: var(--text-dimmed); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── Section headers ──────────────────────────────────────────────── */
+.kphi-section {
+  font-size: 13px;
+  font-weight: 700;
+  color: #6a7a8e;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 8px 0 2px;
+}
+
+/* ── Financial rows (BS/PL style) ─────────────────────────────────── */
+.kphi-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-row);
+  font-size: var(--font-size-base);
+}
+.kphi-row-total {
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--bg-row-total);
+  padding: 8px 18px;
+  margin: 4px -18px;
+  border-bottom: none;
+  border-radius: var(--radius-sm);
+}
+.kphi-row-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kphi-row-value { flex-shrink: 0; text-align: right; padding-left: 10px; }
+
+/* ── Mono / Code ──────────────────────────────────────────────────── */
+.kphi-mono { font-family: var(--font-mono); font-size: var(--font-size-sm); }
+.kphi-code {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--kphi-pink);
+}
+
+/* ── Hero header ──────────────────────────────────────────────────── */
+.kphi-hero {
+  padding: 0 0 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.kphi-hero h1 { font-size: var(--font-size-xl); font-weight: 700; color: var(--text-primary); }
+.kphi-hero p { font-size: var(--font-size-sm); color: var(--text-muted); }
+
+/* ── Positive / Negative values ───────────────────────────────────── */
+.kphi-positive { color: var(--accent-success); }
+.kphi-negative { color: var(--accent-danger); }
+.kphi-warning  { color: var(--accent-warning); }

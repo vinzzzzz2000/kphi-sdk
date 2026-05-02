@@ -30,18 +30,25 @@
       "require": "./src/ui-helpers.js",
       "browser": "./dist/ui-helpers.umd.js"
     },
-    "./schema": "./schema/manifest-schema.json"
+    "./schema": "./schema/manifest-schema.json",
+    "./tokens.css": "./design/tokens.css"
+  },
+  "bin": {
+    "kphi-dev": "scripts/dev.js"
   },
   "files": [
     "src/",
     "types/",
     "schema/",
+    "design/",
+    "scripts/dev.js",
     "dist/",
     "README.md",
     "GUIDELINES.md"
   ],
   "scripts": {
     "build": "node scripts/build.js",
+    "dev": "node scripts/dev.js",
     "test": "node scripts/test.js",
     "prepublishOnly": "npm run build && npm test",
     "release": "npm run build && npm run release:npm && npm run release:gpr",
